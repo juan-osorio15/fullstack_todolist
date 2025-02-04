@@ -4,6 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
-app_1.default.listen(8000, () => {
-    console.log("Server running on port 8000");
-});
+const database_1 = __importDefault(require("./config/database"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const PORT = process.env.PORT;
+database_1.default
+    .connect()
+    .then(() => {
+    console.log("Successfully connected to PostgreSQL!");
+    app_1.default.listen(PORT, () => {
+        console.log(`server running on port ${PORT}`);
+    });
+})
+    .catch((err) => console.error("Database connection failed:", err));
