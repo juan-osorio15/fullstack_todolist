@@ -38,8 +38,8 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 }
 
 export async function loginUser(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
     const userResult = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]

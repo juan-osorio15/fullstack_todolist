@@ -9,6 +9,6 @@ const authMiddleware_1 = __importDefault(require("../middlewares/authMiddleware"
 const router = express_1.default.Router();
 router.get("/:userId", authMiddleware_1.default, todoControllers_1.getUserTodos);
 router.post("/:userId", authMiddleware_1.default, todoControllers_1.postUserTodo);
-// router.put("/edit/:todoId", authMiddleware, postUserTodo);
-// router.delete("/delete/:todoId", authMiddleware, postUserTodo);
+router.put("/edit/:todoId", authMiddleware_1.default, todoControllers_1.updateUserTodo);
+// router.delete("/delete/:todoId", authMiddleware, deleteUserTodo);
 exports.default = router;

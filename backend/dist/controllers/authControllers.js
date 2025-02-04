@@ -46,8 +46,8 @@ function registerUser(req, res) {
 }
 function loginUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { email, password } = req.body;
         try {
+            const { email, password } = req.body;
             const userResult = yield database_1.default.query("SELECT * FROM users WHERE email = $1", [email]);
             if (userResult.rows.length === 0) {
                 res.status(400).json({ message: "no user found with this email" });
