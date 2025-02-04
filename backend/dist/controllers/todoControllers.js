@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserTodos = getUserTodos;
 exports.postUserTodo = postUserTodo;
 exports.updateUserTodo = updateUserTodo;
+exports.deleteUserTodo = deleteUserTodo;
 const database_1 = __importDefault(require("../config/database"));
 function getUserTodos(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -64,6 +65,30 @@ function updateUserTodo(req, res) {
                 return;
             }
             res.status(201).json({ message: "todo updated", todo: result.rows[0] });
+        }
+        catch (error) {
+            res.status(500).json({ message: "server error", error });
+        }
+    });
+}
+function deleteUserTodo(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        try {
+            const { todoId } = req.params;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            const result = yield database_1.default.query("DELETE FROM todos WHERE id = $1 AND user_id = $2 RETURNING *", [todoId, userId]);
+            if (result.rows.length === 0) {
+                res.status(404).json({ message: "todo not found for this user" });
+                return;
+            }
+            // if (userId !== result.rows[0].id) {
+            //   res
+            //     .status(401)
+            //     .json({ message: "you are not allowed to delte this todo" });
+            //   return;
+            // }
+            res.status(201).json({ message: "todo deleted", todo: result.rows[0] });
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });

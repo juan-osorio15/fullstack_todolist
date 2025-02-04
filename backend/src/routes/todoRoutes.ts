@@ -3,7 +3,7 @@ import {
   getUserTodos,
   postUserTodo,
   updateUserTodo,
-  // deleteUserTodo,
+  deleteUserTodo,
 } from "../controllers/todoControllers";
 import authMiddleware from "../middlewares/authMiddleware";
 
@@ -12,6 +12,6 @@ const router = express.Router();
 router.get("/:userId", authMiddleware, getUserTodos);
 router.post("/:userId", authMiddleware, postUserTodo);
 router.put("/edit/:todoId", authMiddleware, updateUserTodo);
-// router.delete("/delete/:todoId", authMiddleware, deleteUserTodo);
+router.delete("/delete/:todoId", authMiddleware, deleteUserTodo);
 
 export default router;

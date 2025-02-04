@@ -64,3 +64,34 @@ export async function updateUserTodo(
     res.status(500).json({ message: "server error", error });
   }
 }
+
+export async function deleteUserTodo(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const { todoId } = req.params;
+    const userId = req.user?.id;
+
+    const result = await pool.query(
+      "DELETE FROM todos WHERE id = $1 AND user_id = $2 RETURNING *",
+      [todoId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: "todo not found for this user" });
+      return;
+    }
+
+    // if (userId !== result.rows[0].id) {
+    //   res
+    //     .status(401)
+    //     .json({ message: "you are not allowed to delte this todo" });
+    //   return;
+    // }
+
+    res.status(201).json({ message: "todo deleted", todo: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ message: "server error", error });
+  }
+}

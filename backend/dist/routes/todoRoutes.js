@@ -10,5 +10,5 @@ const router = express_1.default.Router();
 router.get("/:userId", authMiddleware_1.default, todoControllers_1.getUserTodos);
 router.post("/:userId", authMiddleware_1.default, todoControllers_1.postUserTodo);
 router.put("/edit/:todoId", authMiddleware_1.default, todoControllers_1.updateUserTodo);
-// router.delete("/delete/:todoId", authMiddleware, deleteUserTodo);
+router.delete("/delete/:todoId", authMiddleware_1.default, todoControllers_1.deleteUserTodo);
 exports.default = router;
