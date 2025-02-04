@@ -19,20 +19,19 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const authModels_1 = require("../models/authModels");
 const dbUtils_1 = require("../utils/dbUtils");
+const AppError_1 = __importDefault(require("../utils/AppError"));
 dotenv_1.default.config();
-function registerUser(req, res) {
+function registerUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { username, email, password } = req.body;
             const isUser = yield (0, dbUtils_1.userExists)(email);
             const isUsernameTaken = yield (0, dbUtils_1.usernameExists)(username);
             if (isUser) {
-                res.status(400).json({ message: "user already exists with this email" });
-                return;
+                return next(new AppError_1.default("user already exists with this email", 400));
             }
             if (isUsernameTaken) {
-                res.status(400).json({ message: "username is already taken" });
-                return;
+                return next(new AppError_1.default("username is already taken", 400));
             }
             const salt = yield bcryptjs_1.default.genSalt(10);
             const hashedPwd = yield bcryptjs_1.default.hash(password, salt);
@@ -40,24 +39,22 @@ function registerUser(req, res) {
             res.status(201).json({ message: "user registered", user: newUserRows[0] });
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }
-function loginUser(req, res) {
+function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
             const userResultRows = yield (0, authModels_1.fetchUserByEmail)(email);
             if (userResultRows.length === 0) {
-                res.status(400).json({ message: "no user found with this email" });
-                return;
+                return next(new AppError_1.default("no user found with this email", 404));
             }
             const user = userResultRows[0];
             const isPwdValid = yield bcryptjs_1.default.compare(password, user.password);
             if (!isPwdValid) {
-                res.status(400).json({ message: "invalid credentials" });
-                return;
+                return next(new AppError_1.default("invalid credentials", 401));
             }
             const token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.JWT_SECRET, {
                 expiresIn: "6h",
@@ -68,7 +65,7 @@ function loginUser(req, res) {
             });
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }

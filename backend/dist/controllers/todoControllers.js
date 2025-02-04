@@ -8,13 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserTodos = getUserTodos;
 exports.postUserTodo = postUserTodo;
 exports.updateUserTodo = updateUserTodo;
 exports.deleteUserTodo = deleteUserTodo;
 const todoModels_1 = require("../models/todoModels");
-function getUserTodos(req, res) {
+const AppError_1 = __importDefault(require("../utils/AppError"));
+function getUserTodos(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { userId } = req.params;
@@ -22,11 +26,11 @@ function getUserTodos(req, res) {
             res.json(userTodoRows);
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }
-function postUserTodo(req, res) {
+function postUserTodo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
@@ -34,10 +38,7 @@ function postUserTodo(req, res) {
             const { todo } = req.body;
             const tokenUserId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             if (Number(tokenUserId) !== Number(userId)) {
-                res
-                    .status(401)
-                    .json({ message: "unauthorized to post on behalf of this user" });
-                return;
+                return next(new AppError_1.default("unauthorized to post on behalf of this user", 401));
             }
             const insertResponseRows = yield (0, todoModels_1.insertTodoByUserId)(todo, userId);
             res.status(201).json({
@@ -46,11 +47,11 @@ function postUserTodo(req, res) {
             });
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }
-function updateUserTodo(req, res) {
+function updateUserTodo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
@@ -58,44 +59,40 @@ function updateUserTodo(req, res) {
             const { todo } = req.body;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             if (!userId) {
-                res.status(404).json({ message: "User not found" });
-                return;
+                return next(new AppError_1.default("user not found", 404));
             }
             const updateResponseRows = yield (0, todoModels_1.updateTodoById)(todo, todoId, userId);
             if (updateResponseRows.length === 0) {
-                res.status(404).json({ message: "todo not found for this user" });
-                return;
+                return next(new AppError_1.default("todo not found for this user", 401));
             }
             res
                 .status(201)
                 .json({ message: "todo updated", todo: updateResponseRows[0] });
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }
-function deleteUserTodo(req, res) {
+function deleteUserTodo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
             const { todoId } = req.params;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             if (!userId) {
-                res.status(401).json({ message: "User not found" });
-                return;
+                return next(new AppError_1.default("user not found", 404));
             }
             const deleteResponseRows = yield (0, todoModels_1.deleteTodoById)(todoId, userId);
             if (deleteResponseRows.length === 0) {
-                res.status(404).json({ message: "todo not found for this user" });
-                return;
+                return next(new AppError_1.default("todo not found for this user", 401));
             }
             res
                 .status(201)
                 .json({ message: "todo deleted", todo: deleteResponseRows[0] });
         }
         catch (error) {
-            res.status(500).json({ message: "server error", error });
+            next(error);
         }
     });
 }

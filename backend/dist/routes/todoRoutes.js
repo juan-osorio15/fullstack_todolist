@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const todoControllers_1 = require("../controllers/todoControllers");
-const authMiddleware_1 = __importDefault(require("../middlewares/authMiddleware"));
+const authMiddleware_1 = __importDefault(require("../middleware/authMiddleware"));
 const router = express_1.default.Router();
 router.get("/:userId", authMiddleware_1.default, todoControllers_1.getUserTodos);
 router.post("/:userId", authMiddleware_1.default, todoControllers_1.postUserTodo);

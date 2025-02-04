@@ -1,13 +1,19 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { insertUserToDb, fetchUserByEmail } from "../models/authModels";
 import { userExists, usernameExists } from "../utils/dbUtils";
+import errorHandler from "../middleware/errorHandler";
+import AppError from "../utils/AppError";
 
 dotenv.config();
 
-export async function registerUser(req: Request, res: Response): Promise<void> {
+export async function registerUser(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const { username, email, password } = req.body;
 
@@ -15,12 +21,10 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     const isUsernameTaken = await usernameExists(username);
 
     if (isUser) {
-      res.status(400).json({ message: "user already exists with this email" });
-      return;
+      return next(new AppError("user already exists with this email", 400));
     }
     if (isUsernameTaken) {
-      res.status(400).json({ message: "username is already taken" });
-      return;
+      return next(new AppError("username is already taken", 400));
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -30,26 +34,28 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 
     res.status(201).json({ message: "user registered", user: newUserRows[0] });
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }
 
-export async function loginUser(req: Request, res: Response): Promise<void> {
+export async function loginUser(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const { email, password } = req.body;
     const userResultRows = await fetchUserByEmail(email);
 
     if (userResultRows.length === 0) {
-      res.status(400).json({ message: "no user found with this email" });
-      return;
+      return next(new AppError("no user found with this email", 404));
     }
 
     const user = userResultRows[0];
     const isPwdValid = await bcrypt.compare(password, user.password);
 
     if (!isPwdValid) {
-      res.status(400).json({ message: "invalid credentials" });
-      return;
+      return next(new AppError("invalid credentials", 401));
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
@@ -61,6 +67,6 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
       user: { id: user.id, username: user.username, email: user.email },
     });
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }

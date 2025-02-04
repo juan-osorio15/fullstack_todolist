@@ -1,12 +1,17 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import {
   deleteTodoById,
   getTodosByUserId,
   insertTodoByUserId,
   updateTodoById,
 } from "../models/todoModels";
+import AppError from "../utils/AppError";
 
-export async function getUserTodos(req: Request, res: Response): Promise<void> {
+export async function getUserTodos(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const { userId } = req.params;
 
@@ -14,21 +19,24 @@ export async function getUserTodos(req: Request, res: Response): Promise<void> {
 
     res.json(userTodoRows);
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }
 
-export async function postUserTodo(req: Request, res: Response): Promise<void> {
+export async function postUserTodo(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const { userId } = req.params;
     const { todo } = req.body;
     const tokenUserId = req.user?.id;
 
     if (Number(tokenUserId) !== Number(userId)) {
-      res
-        .status(401)
-        .json({ message: "unauthorized to post on behalf of this user" });
-      return;
+      return next(
+        new AppError("unauthorized to post on behalf of this user", 401)
+      );
     }
 
     const insertResponseRows = await insertTodoByUserId(todo, userId);
@@ -38,13 +46,14 @@ export async function postUserTodo(req: Request, res: Response): Promise<void> {
       todo: insertResponseRows[0],
     });
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }
 
 export async function updateUserTodo(
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): Promise<void> {
   try {
     const { todoId } = req.params;
@@ -52,49 +61,46 @@ export async function updateUserTodo(
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(404).json({ message: "User not found" });
-      return;
+      return next(new AppError("user not found", 404));
     }
 
     const updateResponseRows = await updateTodoById(todo, todoId, userId);
 
     if (updateResponseRows.length === 0) {
-      res.status(404).json({ message: "todo not found for this user" });
-      return;
+      return next(new AppError("todo not found for this user", 401));
     }
 
     res
       .status(201)
       .json({ message: "todo updated", todo: updateResponseRows[0] });
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }
 
 export async function deleteUserTodo(
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): Promise<void> {
   try {
     const { todoId } = req.params;
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({ message: "User not found" });
-      return;
+      return next(new AppError("user not found", 404));
     }
 
     const deleteResponseRows = await deleteTodoById(todoId, userId);
 
     if (deleteResponseRows.length === 0) {
-      res.status(404).json({ message: "todo not found for this user" });
-      return;
+      return next(new AppError("todo not found for this user", 401));
     }
 
     res
       .status(201)
       .json({ message: "todo deleted", todo: deleteResponseRows[0] });
   } catch (error) {
-    res.status(500).json({ message: "server error", error });
+    next(error);
   }
 }

@@ -6,8 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const todoRoutes_1 = __importDefault(require("./routes/todoRoutes"));
+const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/todos", todoRoutes_1.default);
+app.use((err, req, res, next) => {
+    (0, errorHandler_1.default)(err, req, res, next);
+});
 exports.default = app;
