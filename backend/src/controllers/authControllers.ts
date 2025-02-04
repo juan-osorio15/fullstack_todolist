@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/database";
 import dotenv from "dotenv";
+import { insertUserToDb, fetchUserByEmail } from "../models/authModels";
 import { userExists, usernameExists } from "../utils/dbUtils";
 
 dotenv.config();
@@ -12,13 +13,13 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     const { username, email, password } = req.body;
 
     const isUser = await userExists(email);
-    const isUsernameUnique = await usernameExists(username);
+    const isUsernameTaken = await usernameExists(username);
 
     if (isUser) {
       res.status(400).json({ message: "user already exists with this email" });
       return;
     }
-    if (isUsernameUnique) {
+    if (isUsernameTaken) {
       res.status(400).json({ message: "username is already taken" });
       return;
     }
@@ -26,12 +27,9 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     const salt = await bcrypt.genSalt(10);
     const hashedPwd = await bcrypt.hash(password, salt);
 
-    const newUser = await pool.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
-      [username, email, hashedPwd]
-    );
+    const newUserRows = await insertUserToDb(username, email, hashedPwd);
 
-    res.status(201).json({ message: "user registered", user: newUser.rows[0] });
+    res.status(201).json({ message: "user registered", user: newUserRows[0] });
   } catch (error) {
     res.status(500).json({ message: "server error", error });
   }
@@ -40,17 +38,14 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 export async function loginUser(req: Request, res: Response): Promise<void> {
   try {
     const { email, password } = req.body;
-    const userResult = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const userResultRows = await fetchUserByEmail(email);
 
-    if (userResult.rows.length === 0) {
+    if (userResultRows.length === 0) {
       res.status(400).json({ message: "no user found with this email" });
       return;
     }
 
-    const user = userResult.rows[0];
+    const user = userResultRows[0];
     const isPwdValid = await bcrypt.compare(password, user.password);
 
     if (!isPwdValid) {

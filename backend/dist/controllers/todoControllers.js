@@ -8,23 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserTodos = getUserTodos;
 exports.postUserTodo = postUserTodo;
 exports.updateUserTodo = updateUserTodo;
 exports.deleteUserTodo = deleteUserTodo;
-const database_1 = __importDefault(require("../config/database"));
+const todoModels_1 = require("../models/todoModels");
 function getUserTodos(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { userId } = req.params;
-            const todos = yield database_1.default.query("SELECT * FROM todos WHERE user_id = $1", [
-                userId,
-            ]);
-            res.json(todos.rows);
+            const userTodoRows = yield (0, todoModels_1.getTodosByUserId)(userId);
+            res.json(userTodoRows);
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });
@@ -36,10 +31,11 @@ function postUserTodo(req, res) {
         try {
             const { userId } = req.params;
             const { todo } = req.body;
-            const result = yield database_1.default.query("INSERT INTO todos (todo, user_id) VALUES ($1, $2) RETURNING *", [todo, userId]);
-            res
-                .status(201)
-                .json({ message: "todo created successfully!", todo: result.rows[0] });
+            const insertResponseRows = yield (0, todoModels_1.insertTodoByUserId)(todo, userId);
+            res.status(201).json({
+                message: "todo created successfully!",
+                todo: insertResponseRows[0],
+            });
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });
@@ -51,20 +47,20 @@ function updateUserTodo(req, res) {
         var _a;
         try {
             const { todoId } = req.params;
+            const { todo } = req.body;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-            const { updatedTodo } = req.body;
-            const result = yield database_1.default.query("UPDATE todos SET todo = $1 WHERE id = $2 RETURNING *", [updatedTodo, todoId]);
-            if (result.rows.length === 0) {
-                res.status(404).json({ message: "todo not found" });
+            if (!userId) {
+                res.status(401).json({ message: "User not found" });
                 return;
             }
-            if (userId !== result.rows[0].id) {
-                res
-                    .status(401)
-                    .json({ message: "you are not allowed to edit this todo" });
+            const updateResponseRows = yield (0, todoModels_1.updateTodoById)(todo, todoId, userId);
+            if (updateResponseRows.length === 0) {
+                res.status(404).json({ message: "todo not found for this user" });
                 return;
             }
-            res.status(201).json({ message: "todo updated", todo: result.rows[0] });
+            res
+                .status(201)
+                .json({ message: "todo updated", todo: updateResponseRows[0] });
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });
@@ -77,18 +73,18 @@ function deleteUserTodo(req, res) {
         try {
             const { todoId } = req.params;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-            const result = yield database_1.default.query("DELETE FROM todos WHERE id = $1 AND user_id = $2 RETURNING *", [todoId, userId]);
-            if (result.rows.length === 0) {
+            if (!userId) {
+                res.status(401).json({ message: "User not found" });
+                return;
+            }
+            const deleteResponseRows = yield (0, todoModels_1.deleteTodoById)(todoId, userId);
+            if (deleteResponseRows.length === 0) {
                 res.status(404).json({ message: "todo not found for this user" });
                 return;
             }
-            // if (userId !== result.rows[0].id) {
-            //   res
-            //     .status(401)
-            //     .json({ message: "you are not allowed to delte this todo" });
-            //   return;
-            // }
-            res.status(201).json({ message: "todo deleted", todo: result.rows[0] });
+            res
+                .status(201)
+                .json({ message: "todo deleted", todo: deleteResponseRows[0] });
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });

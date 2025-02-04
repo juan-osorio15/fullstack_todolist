@@ -16,8 +16,8 @@ exports.registerUser = registerUser;
 exports.loginUser = loginUser;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const database_1 = __importDefault(require("../config/database"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const authModels_1 = require("../models/authModels");
 const dbUtils_1 = require("../utils/dbUtils");
 dotenv_1.default.config();
 function registerUser(req, res) {
@@ -25,19 +25,19 @@ function registerUser(req, res) {
         try {
             const { username, email, password } = req.body;
             const isUser = yield (0, dbUtils_1.userExists)(email);
-            const isUsernameUnique = yield (0, dbUtils_1.usernameExists)(username);
+            const isUsernameTaken = yield (0, dbUtils_1.usernameExists)(username);
             if (isUser) {
                 res.status(400).json({ message: "user already exists with this email" });
                 return;
             }
-            if (isUsernameUnique) {
+            if (isUsernameTaken) {
                 res.status(400).json({ message: "username is already taken" });
                 return;
             }
             const salt = yield bcryptjs_1.default.genSalt(10);
             const hashedPwd = yield bcryptjs_1.default.hash(password, salt);
-            const newUser = yield database_1.default.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email", [username, email, hashedPwd]);
-            res.status(201).json({ message: "user registered", user: newUser.rows[0] });
+            const newUserRows = yield (0, authModels_1.insertUserToDb)(username, email, hashedPwd);
+            res.status(201).json({ message: "user registered", user: newUserRows[0] });
         }
         catch (error) {
             res.status(500).json({ message: "server error", error });
@@ -48,12 +48,12 @@ function loginUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
-            const userResult = yield database_1.default.query("SELECT * FROM users WHERE email = $1", [email]);
-            if (userResult.rows.length === 0) {
+            const userResultRows = yield (0, authModels_1.fetchUserByEmail)(email);
+            if (userResultRows.length === 0) {
                 res.status(400).json({ message: "no user found with this email" });
                 return;
             }
-            const user = userResult.rows[0];
+            const user = userResultRows[0];
             const isPwdValid = yield bcryptjs_1.default.compare(password, user.password);
             if (!isPwdValid) {
                 res.status(400).json({ message: "invalid credentials" });
