@@ -28,9 +28,17 @@ function getUserTodos(req, res) {
 }
 function postUserTodo(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             const { userId } = req.params;
             const { todo } = req.body;
+            const tokenUserId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (Number(tokenUserId) !== Number(userId)) {
+                res
+                    .status(401)
+                    .json({ message: "unauthorized to post on behalf of this user" });
+                return;
+            }
             const insertResponseRows = yield (0, todoModels_1.insertTodoByUserId)(todo, userId);
             res.status(201).json({
                 message: "todo created successfully!",
@@ -50,7 +58,7 @@ function updateUserTodo(req, res) {
             const { todo } = req.body;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             if (!userId) {
-                res.status(401).json({ message: "User not found" });
+                res.status(404).json({ message: "User not found" });
                 return;
             }
             const updateResponseRows = yield (0, todoModels_1.updateTodoById)(todo, todoId, userId);

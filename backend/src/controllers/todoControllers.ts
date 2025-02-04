@@ -5,7 +5,6 @@ import {
   insertTodoByUserId,
   updateTodoById,
 } from "../models/todoModels";
-import pool from "../config/database";
 
 export async function getUserTodos(req: Request, res: Response): Promise<void> {
   try {
@@ -23,6 +22,14 @@ export async function postUserTodo(req: Request, res: Response): Promise<void> {
   try {
     const { userId } = req.params;
     const { todo } = req.body;
+    const tokenUserId = req.user?.id;
+
+    if (Number(tokenUserId) !== Number(userId)) {
+      res
+        .status(401)
+        .json({ message: "unauthorized to post on behalf of this user" });
+      return;
+    }
 
     const insertResponseRows = await insertTodoByUserId(todo, userId);
 
@@ -45,7 +52,7 @@ export async function updateUserTodo(
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
       return;
     }
 
