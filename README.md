@@ -114,4 +114,4 @@ Initially, I planned to make this a **fullstack** app with a frontend. However, 
 - Setting up **React types** and Next.js **type configurations** was challenging.
 - Propper planning and type definitions havve to be done at the beginning of the project, not whenever issues appear
 
-I now recognize that I need to **deepen my understanding of TypeScript** in fullstack applications before continuing with the frontend.
+I now recognize that I need to **deepen my understanding of TypeScript** in fullstack applications before continuing with the frontend and in order to take full advantage of it in the backend.
