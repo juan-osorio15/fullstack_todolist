@@ -7,6 +7,15 @@
   --foreground: #171717;
 }
 
+@font-face {
+  font-family: playfair;
+  src: url(../fonts/playfair.ttf);
+}
+@font-face {
+  font-family: roboto;
+  src: url(../fonts/roboto_mono.ttf);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -17,5 +26,5 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: playfair, sans-serif;
 }
