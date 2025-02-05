@@ -9,9 +9,13 @@ const todoRoutes_1 = __importDefault(require("./routes/todoRoutes"));
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const cors_1 = __importDefault(require("cors"));
 const corsConfig_1 = require("./config/corsConfig");
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const yamljs_1 = __importDefault(require("yamljs"));
+const swaggerDocument = yamljs_1.default.load("./docs/swagger.yaml");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)(corsConfig_1.corsOptions));
 app.use(express_1.default.json());
+app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/todos", todoRoutes_1.default);
 app.use((err, req, res, next) => {
