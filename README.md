@@ -106,7 +106,7 @@ http://localhost:8000/api-docs
 
 ## Observations
 
-Initially, I planned to make this a **fullstack** app with a frontend. However, as I progressed with the **Next.js frontend**, I realized I was not utilizing **TypeScript** effectively. I implemented my **own authentication with JWT**, leading to extra work becasue my initial plan was to store the JWT in **localStorage** and use it for protected routes.If I started this project again, I would use a library like Next Auth. In general, **TypeScript revealed multiple issues** with the way that I was building the frontend which I do not yet know how to fix yet.
+Initially, I planned to make this a **fullstack** app with a frontend. However, as I progressed with the **Next.js frontend**, I realized I was not utilizing **TypeScript** effectively. I implemented my **own authentication with JWT**, leading to extra work becasue my initial plan was to store the JWT in **localStorage** and use it for protected routes.If I started this project again, I would use a library like Next Auth. In general, **TypeScript revealed multiple issues** with the way that I was building the frontend which I don't know how to fix yet.
 
 ### Challenges Faced:
 
